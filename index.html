@@ -12,6 +12,16 @@ main{max-width:1100px;margin:auto;padding:12px 16px 38px}.page{display:none;anim
 .students{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.student{background:#0c1430;border:1px solid #344575;border-radius:11px;padding:10px;display:flex;gap:8px;align-items:center}.student input{padding:8px;min-width:0}.student .number{color:var(--cyan);font-weight:900}
 .qtop{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.timer{font-size:2rem;color:var(--gold);font-weight:950}.progress{height:7px;background:#080e26;border-radius:10px;overflow:hidden;margin:12px 0}.progress div{height:100%;width:100%;background:linear-gradient(90deg,var(--cyan),var(--pink))}
 .question{font-size:clamp(1.3rem,3vw,2rem);line-height:1.5;margin:18px 0}.options{display:grid;grid-template-columns:1fr 1fr;gap:10px}.opt{background:#263460;color:white;text-align:left;border:1px solid #51639a;min-height:54px;box-shadow:none}.opt.correct{background:#145a43;border:2px solid var(--green)}.opt.wrong{background:#67224f;border:2px solid var(--pink)}
+
+/* 公布答案后，在每位学生答案旁显示个人作答结果 */
+.answer-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}
+.answer-entry label{grid-column:1/-1;margin-bottom:0}
+.answer-entry select{width:100%;min-width:0}
+.answer-result{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:78px;padding:8px 9px;border-radius:9px;font-size:.95rem;font-weight:900;white-space:nowrap;letter-spacing:.02em}
+.answer-result.is-correct{color:#47edff;background:#47edff18;border:1px solid #47edff80;text-shadow:0 0 8px #47edff45}
+.answer-result.is-wrong{color:#ff626f;background:#ff4f5d18;border:1px solid #ff626f80;text-shadow:0 0 8px #ff626f45}
+.answer-result.is-blank{color:var(--muted);background:#b1bbdf10;border:1px solid #b1bbdf45}
+
 .answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.answer-entry{padding:10px;border:1px solid #344575;border-radius:11px;background:#0c1430}.answer-entry label{margin-bottom:7px}.answer-entry select{padding:8px}.scoreboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.scorecard{background:linear-gradient(135deg,#192754,#25194d);border:1px solid #6551a5;border-radius:13px;padding:13px;display:flex;justify-content:space-between;gap:10px;box-shadow:0 5px 0 #080d22;align-items:center}.scorecard:nth-child(1){border:2px solid #ffe477;background:linear-gradient(135deg,#514018,#242044);box-shadow:0 0 20px #ffe47730}.scorecard:nth-child(2){border-color:#b9d7ff}.scorecard:nth-child(3){border-color:#ffad7a}.scorecard b{font-size:1.25rem;text-shadow:0 0 10px #ffe47730}.scorecard b{color:var(--gold)}.reveal{border:1px dashed #6b7db3;border-radius:12px;background:#0c1732;padding:14px;margin-top:14px}.hidden{display:none!important}.nav{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:15px}.nav button{min-width:145px}.footer{text-align:center;color:#8794bf;font-size:.8rem;padding:10px}
 @media(max-width:680px){.students,.answer-grid,.options,.scoreboard{grid-template-columns:1fr}.row>*{min-width:100%}.steps{font-size:.82rem}.nav button{flex:1}}
 .question-instruction{font-size:clamp(1.1rem,2vw,1.7rem);font-weight:800;color:var(--cyan);margin:14px 0 6px;letter-spacing:.02em}.question{margin-top:4px}
@@ -118,9 +128,26 @@ el.classList.add("hidden");
 $("questionText").textContent=text;
 }
 function loadQuestion(){clearInterval(timerId);if(pos>=round.length){finishRound();return}current=round[pos];revealed=false;remaining=+$("secondsSetting").value||0;$("timer").textContent=remaining?remaining+"":"—";$("progressBar").style.width="100%";$("qMeta").textContent=`${current.subject} · ${current.grade}年级 · ${current.difficulty} · ${current.category}`;$("qCounter").textContent=`第 ${pos+1} / ${round.length} 题`;setQuestionWording(current.question);$("options").innerHTML="";current.options.forEach((o,i)=>{let b=document.createElement("button");b.className="opt";b.textContent=String.fromCharCode(65+i)+". "+o;b.disabled=true;$("options").appendChild(b)});$("answerReveal").classList.add("hidden");$("revealButton").disabled=false;$("nextButton").disabled=true;$("quizStatus").textContent="请学生独立作答，再录入答案；全部录入后统一公布。";renderAnswerEntries();saveProgress()}
-function renderAnswerEntries(){let el=$("answerEntries");el.innerHTML="";students.forEach((s,i)=>{let d=document.createElement("div");d.className="answer-entry";d.innerHTML=`<label>${String(i+1).padStart(2,"0")}. ${esc(s.name)}</label><select aria-label="${esc(s.name)}答案" ${revealed?"disabled":""}><option value="">未作答 / 未录入</option>${["A","B","C","D"].map((v,j)=>`<option value="${j}">${v}</option>`).join("")}</select>`;let sel=d.querySelector("select");sel.value=s.answer;sel.onchange=e=>{s.answer=e.target.value;saveProgress()};el.appendChild(d)})}
+function renderAnswerEntries(){
+let el=$("answerEntries");el.innerHTML="";
+students.forEach((s,i)=>{
+let d=document.createElement("div");d.className="answer-entry";
+let result="";
+if(revealed){
+if(s.answer===""){result='<span class="answer-result is-blank" aria-label="未作答">— 未作答</span>'}
+else{
+let isCorrect=Number(s.answer)===Number(current.answer);
+result=isCorrect
+?'<span class="answer-result is-correct" aria-label="答对">✓ 答对</span>'
+:'<span class="answer-result is-wrong" aria-label="答错">✗ 答错</span>';
+}
+}
+d.innerHTML=`<label>${String(i+1).padStart(2,"0")}. ${esc(s.name)}</label><select aria-label="${esc(s.name)}答案" ${revealed?"disabled":""}><option value="">未作答 / 未录入</option>${["A","B","C","D"].map((v,j)=>`<option value="${j}">${v}</option>`).join("")}</select>${result}`;
+let sel=d.querySelector("select");sel.value=s.answer;sel.onchange=e=>{s.answer=e.target.value;saveProgress()};el.appendChild(d)
+})
+}
 function startTimer(){if(!current||revealed)return;clearInterval(timerId);let configured=+$("secondsSetting").value;if(!configured){$("quizStatus").textContent="当前设置为不限时。";return}remaining=configured;$("timer").textContent=remaining;$("progressBar").style.width="100%";saveProgress();timerId=setInterval(()=>{remaining--;$("timer").textContent=remaining;$("progressBar").style.width=Math.max(0,remaining/configured*100)+"%";if(remaining%3===0)saveProgress();if(remaining<=5)beep(420,.05);if(remaining<=0){clearInterval(timerId);$("quizStatus").textContent="时间到！请停止作答并录入答案。";saveProgress();beep(220,.2)}},1000)}
-function renderRevealedDisplay(correct){let a=current.answer;[...$("options").children].forEach((b,i)=>{if(i===a)b.classList.add("correct")});$("answerReveal").classList.remove("hidden");$("answerReveal").innerHTML=`<strong style="color:var(--green);font-size:1.12em">✅ 正确答案：${String.fromCharCode(65+a)}. ${esc(current.options[a])}</strong><div class="explain-title">💡 答案解析</div><p class="explain-body">${esc(current.explanation||"本题暂无额外解析。老师可以结合题目知识点进行补充讲解。")}</p><div class="score-line">🎉 本题答对：${correct.length} 人　｜　每位答对者 +${roundPoints} 分</div>`;[...$("answerEntries").querySelectorAll("select")].forEach(s=>s.disabled=true);$("revealButton").disabled=true;$("nextButton").disabled=false}
+function renderRevealedDisplay(correct){let a=current.answer;renderAnswerEntries();[...$("options").children].forEach((b,i)=>{if(i===a)b.classList.add("correct")});$("answerReveal").classList.remove("hidden");$("answerReveal").innerHTML=`<strong style="color:var(--green);font-size:1.12em">✅ 正确答案：${String.fromCharCode(65+a)}. ${esc(current.options[a])}</strong><div class="explain-title">💡 答案解析</div><p class="explain-body">${esc(current.explanation||"本题暂无额外解析。老师可以结合题目知识点进行补充讲解。")}</p><div class="score-line">🎉 本题答对：${correct.length} 人　｜　每位答对者 +${roundPoints} 分</div>`;[...$("answerEntries").querySelectorAll("select")].forEach(s=>s.disabled=true);$("revealButton").disabled=true;$("nextButton").disabled=false}
 function revealAnswer(){if(!current||revealed)return;clearInterval(timerId);revealed=true;let a=current.answer,correct=[];students.forEach(s=>{s.attempted++;if(s.answer!==""&&Number(s.answer)===a){s.score+=roundPoints;s.correct++;s.roundCorrect=(s.roundCorrect||0)+1;correct.push(s.name)}});renderRevealedDisplay(correct);$("quizStatus").textContent="答案已公布，答对的学生已自动加分。";roundHistory.push({question:current.question,subject:current.subject,correct:current.options[a],explanation:current.explanation||"",correctStudents:correct.join("、")});saveProgress();beep(950,.18)}
 function nextQuestion(){if(!revealed)return;pos++;if(pos>=round.length){finishRound();return}students.forEach(s=>s.answer="");loadQuestion();beep(720);saveProgress()}
 function finishRound(manual=false){clearInterval(timerId);if(!round.length){showPage("pageResults");return}if(manual&&current&&!revealed){if(!confirm("现在提前结算吗？当前题目尚未公布答案，本题不会计分。"))return}current=null;showPage("pageResults");$("finalSummary").innerHTML=[...students].sort((a,b)=>b.score-a.score).map((s,i)=>`<div class="scorecard"><span><strong style="font-size:1.15em">${["🥇","🥈","🥉"][i]||"🎮"} ${i+1}. ${esc(s.name)}</strong><small class="muted" style="display:block;margin-top:5px">本轮答对 ${s.roundCorrect||0} 题 · ${s.correct||0} 次累计答对</small></span><b>${s.score} 分 ⭐</b></div>`).join("");localStorage.removeItem(SAVE_KEY);beep(1000,.2)}
