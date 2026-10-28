@@ -73,6 +73,24 @@ body.quiz-mode #pageQuiz>.panel:nth-child(2) .answer-entry .answer-result{min-wi
  body.quiz-mode #pageQuiz>.panel:nth-child(2) .answer-entry{grid-template-columns:minmax(0,1fr) auto auto}
 }
 
+
+/* 答案录入下拉选项使用白底深色字，确保清晰可读 */
+.answer-entry select{
+  background:#fff!important;
+  color:#111827!important;
+  border-color:#fff!important;
+  color-scheme:light;
+  opacity:1;
+}
+.answer-entry select option{
+  background-color:#fff;
+  color:#111827;
+}
+.answer-entry select:disabled{
+  background:#fff!important;
+  color:#111827!important;
+  opacity:1;
+}
 </style></head>
 <body>
 <header><div class="eyebrow">LEARN · PLAY · LEVEL UP</div><h1>CLASSROOM <span>ARCADE</span></h1><p>个人答题模式 · 马来语 Bahasa Melayu × 华文</p></header>
