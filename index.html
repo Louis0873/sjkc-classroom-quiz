@@ -91,6 +91,21 @@ body.quiz-mode #pageQuiz>.panel:nth-child(2) .answer-entry .answer-result{min-wi
   color:#111827!important;
   opacity:1;
 }
+
+/* 题目与答案文字统一为高对比白色；覆盖禁用选项按钮的默认半透明效果 */
+#questionInstruction,
+#questionText,
+#options .opt,
+#options .opt:disabled,
+#options .opt.correct,
+#options .opt.wrong,
+#answerReveal,
+#answerReveal * {
+  color: #fff !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
 </style></head>
 <body>
 <header><div class="eyebrow">LEARN · PLAY · LEVEL UP</div><h1>CLASSROOM <span>ARCADE</span></h1><p>个人答题模式 · 马来语 Bahasa Melayu × 华文</p></header>
